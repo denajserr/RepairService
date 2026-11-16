@@ -129,6 +129,10 @@ namespace RepairService
             if (!TryReadSize("Кількість рядків (типів): ", out int rows)) return;
             if (!TryReadSize("Кількість стовпців (місяців): ", out int cols)) return;
 
+            int[] colTotals = new int[cols];
+            int grandTotal = 0;
+            string line = new string('-', 11 + cols * 5 + 7);
+
             Console.WriteLine("\nПрийнято заявок за типами пристроїв і місяцями");
             Console.Write("{0,-11}", "Тип");
             for (int c = 0; c < cols; c++)
@@ -136,6 +140,7 @@ namespace RepairService
                 Console.Write("{0,5}", ColumnName(c));
             }
             Console.WriteLine("{0,7}", "Разом");
+            Console.WriteLine(line);
 
             for (int r = 0; r < rows; r++)
             {
@@ -145,10 +150,20 @@ namespace RepairService
                 {
                     int value = RequestCount(r, c);
                     rowTotal += value;
+                    colTotals[c] += value;
                     Console.Write("{0,5}", value);
                 }
+                grandTotal += rowTotal;
                 Console.WriteLine("{0,7}", rowTotal);
             }
+
+            Console.WriteLine(line);
+            Console.Write("{0,-11}", "Разом");
+            for (int c = 0; c < cols; c++)
+            {
+                Console.Write("{0,5}", colTotals[c]);
+            }
+            Console.WriteLine("{0,7}", grandTotal);
         }
     }
 }
