@@ -73,35 +73,58 @@ namespace RepairService
             Console.WriteLine("Місткість сховища: 100 записів.");
         }
 
+        static int ReadInt(string prompt, int min, int max)
+        {
+            while (true)
+            {
+                Console.Write(prompt);
+                string text = Console.ReadLine();
+                if (int.TryParse(text, out int value) && value >= min && value <= max) return value;
+                Console.WriteLine($"Помилка: введіть ціле число від {min} до {max}.");
+            }
+        }
+
+        static double ReadDouble(string prompt, double min, double max)
+        {
+            while (true)
+            {
+                Console.Write(prompt);
+                string text = Console.ReadLine();
+                if (double.TryParse(text, NumberStyles.Float, CultureInfo.CurrentCulture, out double value)
+                    && !double.IsNaN(value) && !double.IsInfinity(value) && value >= min && value <= max)
+                    return value;
+                Console.WriteLine($"Помилка: введіть число від {min} до {max}.");
+            }
+        }
+
+        static double CalculateCost(double hours)
+        {
+            double work = HourRate * hours;
+            double surcharge = Math.Min(MaxSurcharge, 0.05 * hours);
+            return work * (1 + surcharge) + PartsCost;
+        }
+
+        static void PrintCostTable(double start, double end, double step)
+        {
+            Console.WriteLine("\nВартість ремонту залежно від часу роботи (грн)");
+            Console.WriteLine("{0,8}{1,14}", "Годин", "З деталями");
+            for (double hours = start; hours <= end + 1e-9; hours += step)
+                Console.WriteLine("{0,8:F2}{1,14:F2}", hours, CalculateCost(hours));
+        }
+
         static void ShowCostTable()
         {
-            double start = 0.5;
-            double end = 6.0;
-            double step = 0.5;
-
-            Console.WriteLine("Вартість ремонту залежно від часу роботи (грн)");
-            Console.WriteLine("{0,8}{1,12}{2,14}", "Годин", "Робота", "З деталями");
-
-            // запас 1e-9 захищає останній рядок від похибки дробових чисел
-            for (double hours = start; hours <= end + 1e-9; hours += step)
+            double start = ReadDouble("Початок (години): ", 0, 1000);
+            double end = ReadDouble("Кінець (години): ", start, 1000);
+            double step = ReadDouble("Крок (години): ", 0.01, 1000);
+            if ((end - start) / step > 200)
             {
-                double work = HourRate * hours;
-                double surcharge = Math.Min(MaxSurcharge, 0.05 * hours);
-                double total = work * (1 + surcharge) + PartsCost;
-                Console.WriteLine("{0,8:F2}{1,12:F2}{2,14:F2}", hours, work, total);
+                Console.WriteLine("Занадто багато рядків. Збільште крок або зменште межі.");
+                return;
             }
+            PrintCostTable(start, end, step);
         }
-        static bool TryReadSize(string prompt, out int size)
-        {
-            Console.Write(prompt);
-            string text = Console.ReadLine();
-            if (!int.TryParse(text, out size) || size <= 0 || size > MaxTableSize)
-            {
-                Console.WriteLine($"Помилка: потрібне ціле число від 1 до {MaxTableSize}.");
-                return false;
-            }
-            return true;
-        }
+
 
         static string RowName(int index)
         {
@@ -121,22 +144,16 @@ namespace RepairService
 
         static void ShowRequestsTable()
         {
-            if (!TryReadSize("Кількість рядків (типів): ", out int rows)) return;
-            if (!TryReadSize("Кількість стовпців (місяців): ", out int cols)) return;
-
+            int rows = ReadInt("Кількість рядків (типів): ", 1, MaxTableSize);
+            int cols = ReadInt("Кількість стовпців (місяців): ", 1, MaxTableSize);
             int[] colTotals = new int[cols];
             int grandTotal = 0;
             string line = new string('-', 11 + cols * 5 + 7);
-
             Console.WriteLine("\nПрийнято заявок за типами пристроїв і місяцями");
             Console.Write("{0,-11}", "Тип");
-            for (int c = 0; c < cols; c++)
-            {
-                Console.Write("{0,5}", ColumnName(c));
-            }
+            for (int c = 0; c < cols; c++) Console.Write("{0,5}", ColumnName(c));
             Console.WriteLine("{0,7}", "Разом");
             Console.WriteLine(line);
-
             for (int r = 0; r < rows; r++)
             {
                 int rowTotal = 0;
@@ -151,13 +168,9 @@ namespace RepairService
                 grandTotal += rowTotal;
                 Console.WriteLine("{0,7}", rowTotal);
             }
-
             Console.WriteLine(line);
             Console.Write("{0,-11}", "Разом");
-            for (int c = 0; c < cols; c++)
-            {
-                Console.Write("{0,5}", colTotals[c]);
-            }
+            for (int c = 0; c < cols; c++) Console.Write("{0,5}", colTotals[c]);
             Console.WriteLine("{0,7}", grandTotal);
         }
     }
