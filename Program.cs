@@ -19,37 +19,32 @@ namespace RepairService
         static void Main(string[] args)
         {
             Console.OutputEncoding = Encoding.UTF8;
-            
             CultureInfo.CurrentCulture = new CultureInfo("uk-UA");
-
             bool running = true;
             while (running)
             {
-                Console.WriteLine("=== Сервіс ремонту техніки ===");
-                Console.WriteLine("1 — довідка про програму");
-                Console.WriteLine("2 — вартість ремонту залежно від часу");
-                Console.WriteLine("3 — заявки за типами пристроїв і місяцями");
-                Console.WriteLine("0 — вихід");
-                Console.Write("Ваш вибір: ");
+                ShowMenu();
                 string choice = Console.ReadLine();
                 Console.WriteLine();
-
                 switch (choice)
                 {
-                    case "1":
-                        ShowAbout();
-                        Pause();
-                        break;
-                    case "2":
-                        ShowCostTable();
-                        Pause();
-                        break;
-                    case "3":
-                        ShowRequestsTable();
-                        Pause();
-                        break;
+                    case "1": ShowAbout(); Pause(); break;
+                    case "2": ShowCostTable(); Pause(); break;
+                    case "3": ShowRequestsTable(); Pause(); break;
+                    case "0": running = false; break;
+                    default: Console.WriteLine("Немає такого пункту. Спробуйте ще раз."); Pause(); break;
                 }
             }
+        }
+
+        static void ShowMenu()
+        {
+            Console.WriteLine("=== Сервіс ремонту техніки ===");
+            Console.WriteLine("1 — довідка про програму");
+            Console.WriteLine("2 — вартість ремонту залежно від часу");
+            Console.WriteLine("3 — заявки за типами пристроїв і місяцями");
+            Console.WriteLine("0 — вихід");
+            Console.Write("Ваш вибір: ");
         }
 
         static void Pause()
