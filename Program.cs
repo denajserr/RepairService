@@ -41,7 +41,8 @@ namespace RepairService
                     case "1": ShowAbout(); Pause(); break;
                     case "2": AddRequest(); Pause(); break;
                     case "3": ShowRequests(); Pause(); break;
-                    case "4": ShowCostTable(); Pause(); break;
+                    case "4": ShowAverageRepairTime(); Pause(); break;
+                    case "5": ShowCostTable(); Pause(); break;
                     case "0": running = false; break;
                     default: Console.WriteLine("Немає такого пункту. Спробуйте ще раз."); Pause(); break;
                 }
@@ -54,7 +55,8 @@ namespace RepairService
             Console.WriteLine("1 — про програму");
             Console.WriteLine("2 — додати заявку");
             Console.WriteLine("3 — переглянути заявки");
-            Console.WriteLine("4 — таблиця вартості ремонту");
+            Console.WriteLine("4 — середній термін ремонту за пристроями");
+            Console.WriteLine("5 — таблиця вартості ремонту");
             Console.WriteLine("0 — вихід");
             Console.Write("Ваш вибір: ");
         }
@@ -161,6 +163,37 @@ namespace RepairService
         }
 
         // Повертає середню кількість днів ремонту для заданого типу пристрою.
+        static double CalculateAverageDuration(string device)
+        {
+            double totalDays = 0;
+            int count = 0;
+            for (int i = 0; i < requestCount; i++)
+            {
+                if (string.Equals(Devices[i], device, StringComparison.CurrentCultureIgnoreCase))
+                {
+                    totalDays += (IssuedDates[i] - ReceivedDates[i]).TotalDays;
+                    count++;
+                }
+            }
+            return count == 0 ? -1 : totalDays / count;
+        }
+
+        static bool IsFirstDevice(int index)
+        {
+            for (int i = 0; i < index; i++)
+                if (string.Equals(Devices[i], Devices[index], StringComparison.CurrentCultureIgnoreCase)) return false;
+            return true;
+        }
+
+        static void ShowAverageRepairTime()
+        {
+            if (requestCount == 0) { Console.WriteLine("Додайте заявки, щоб обчислити середній термін."); return; }
+            Console.WriteLine("Середній термін ремонту за типами пристроїв:");
+            for (int i = 0; i < requestCount; i++)
+                if (IsFirstDevice(i))
+                    Console.WriteLine($"{Devices[i]}: {CalculateAverageDuration(Devices[i]):F1} дн.");
+        }
+
         static double CalculateCost(double hours)
         {
             double work = HourRate * hours;
