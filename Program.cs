@@ -10,6 +10,12 @@ namespace RepairService
         const double PartsCost = 200.0;
         const double MaxSurcharge = 0.30;
         
+        const int MaxTableSize = 20;
+
+        static readonly string[] DeviceTypes = { "Смартфон", "Ноутбук", "Планшет", "Телевізор", "Принтер" };
+        static readonly string[] Months = { "Січ", "Лют", "Бер", "Кві", "Тра", "Чер",
+            "Лип", "Сер", "Вер", "Жов", "Лис", "Гру" };
+        
         static void Main(string[] args)
         {
             Console.OutputEncoding = Encoding.UTF8;
@@ -39,7 +45,7 @@ namespace RepairService
                         Pause();
                         break;
                     case "3":
-                        Console.WriteLine("Поки не зроблено.");
+                        ShowRequestsTable();
                         Pause();
                         break;
                 }
@@ -88,6 +94,60 @@ namespace RepairService
                 double surcharge = Math.Min(MaxSurcharge, 0.05 * hours);
                 double total = work * (1 + surcharge) + PartsCost;
                 Console.WriteLine("{0,8:F2}{1,12:F2}{2,14:F2}", hours, work, total);
+            }
+        }
+        static bool TryReadSize(string prompt, out int size)
+        {
+            Console.Write(prompt);
+            string text = Console.ReadLine();
+            if (!int.TryParse(text, out size) || size <= 0 || size > MaxTableSize)
+            {
+                Console.WriteLine($"Помилка: потрібне ціле число від 1 до {MaxTableSize}.");
+                return false;
+            }
+            return true;
+        }
+
+        static string RowName(int index)
+        {
+            return index < DeviceTypes.Length ? DeviceTypes[index] : "Тип " + (index + 1);
+        }
+
+        static string ColumnName(int index)
+        {
+            return index < Months.Length ? Months[index] : "М" + (index + 1);
+        }
+
+// умовні дані: справжні заявки з'являться разом зі сховищем
+        static int RequestCount(int row, int col)
+        {
+            return (row * 5 + col * 3 + row * col) % 9 + 1;
+        }
+
+        static void ShowRequestsTable()
+        {
+            if (!TryReadSize("Кількість рядків (типів): ", out int rows)) return;
+            if (!TryReadSize("Кількість стовпців (місяців): ", out int cols)) return;
+
+            Console.WriteLine("\nПрийнято заявок за типами пристроїв і місяцями");
+            Console.Write("{0,-11}", "Тип");
+            for (int c = 0; c < cols; c++)
+            {
+                Console.Write("{0,5}", ColumnName(c));
+            }
+            Console.WriteLine("{0,7}", "Разом");
+
+            for (int r = 0; r < rows; r++)
+            {
+                int rowTotal = 0;
+                Console.Write("{0,-11}", RowName(r));
+                for (int c = 0; c < cols; c++)
+                {
+                    int value = RequestCount(r, c);
+                    rowTotal += value;
+                    Console.Write("{0,5}", value);
+                }
+                Console.WriteLine("{0,7}", rowTotal);
             }
         }
     }
