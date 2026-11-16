@@ -6,31 +6,42 @@ namespace RepairService
 {
     internal class Program
     {
+        const int Capacity = 100;
         const double HourRate = 350.0;
         const double PartsCost = 200.0;
         const double MaxSurcharge = 0.30;
-        
-        const int MaxTableSize = 20;
 
-        static readonly string[] DeviceTypes = { "Смартфон", "Ноутбук", "Планшет", "Телевізор", "Принтер" };
-        static readonly string[] Months = { "Січ", "Лют", "Бер", "Кві", "Тра", "Чер",
-            "Лип", "Сер", "Вер", "Жов", "Лис", "Гру" };
-        
+        static readonly string[] StatusNames = { "Прийнято", "У ремонті", "Видано" };
+
+        // Паралельні масиви зберігають записи заявок без власних класів і колекцій.
+        static readonly int[] RequestNumbers = new int[Capacity];
+        static readonly string[] Clients = new string[Capacity];
+        static readonly string[] Devices = new string[Capacity];
+        static readonly string[] Faults = new string[Capacity];
+        static readonly DateTime[] ReceivedDates = new DateTime[Capacity];
+        static readonly DateTime[] IssuedDates = new DateTime[Capacity];
+        static readonly double[] Costs = new double[Capacity];
+        static readonly int[] StatusCodes = new int[Capacity];
+        static int requestCount;
+
         static void Main(string[] args)
         {
             Console.OutputEncoding = Encoding.UTF8;
             CultureInfo.CurrentCulture = new CultureInfo("uk-UA");
             bool running = true;
+
             while (running)
             {
                 ShowMenu();
                 string choice = Console.ReadLine();
                 Console.WriteLine();
+
                 switch (choice)
                 {
                     case "1": ShowAbout(); Pause(); break;
-                    case "2": ShowCostTable(); Pause(); break;
-                    case "3": ShowRequestsTable(); Pause(); break;
+                    case "2": AddRequest(); Pause(); break;
+                    case "3": ShowRequests(); Pause(); break;
+                    case "4": ShowCostTable(); Pause(); break;
                     case "0": running = false; break;
                     default: Console.WriteLine("Немає такого пункту. Спробуйте ще раз."); Pause(); break;
                 }
@@ -40,9 +51,10 @@ namespace RepairService
         static void ShowMenu()
         {
             Console.WriteLine("=== Сервіс ремонту техніки ===");
-            Console.WriteLine("1 — довідка про програму");
-            Console.WriteLine("2 — вартість ремонту залежно від часу");
-            Console.WriteLine("3 — заявки за типами пристроїв і місяцями");
+            Console.WriteLine("1 — про програму");
+            Console.WriteLine("2 — додати заявку");
+            Console.WriteLine("3 — переглянути заявки");
+            Console.WriteLine("4 — таблиця вартості ремонту");
             Console.WriteLine("0 — вихід");
             Console.Write("Ваш вибір: ");
         }
@@ -53,24 +65,19 @@ namespace RepairService
             Console.ReadKey(true);
             Console.Clear();
         }
+
         static void ShowAbout()
         {
-            string[] names = { "Номер заявки", "Клієнт", "Пристрій", "Несправність",
-                "Дата прийому", "Дата видачі", "Вартість",
-                "Код статусу (довідник)" };
-            string[] types = { "int", "string", "string", "string",
-                "DateTime", "DateTime", "double", "int" };
+            string[] fields = { "Номер заявки — int", "Клієнт — string", "Пристрій — string",
+                "Несправність — string", "Дата прийому — DateTime", "Дата видачі — DateTime",
+                "Вартість — double", "Код статусу — int" };
 
             Console.WriteLine("Тема: Сервіс ремонту техніки.");
             Console.WriteLine("Сутності: Користувач, Заявка, Статус (довідник).");
-            Console.WriteLine($"Поля сутності «Заявка» ({names.Length}):");
-            for (int i = 0; i < names.Length; i++)
-            {
-                Console.WriteLine("{0,2}. {1,-24}{2}", i + 1, names[i], types[i]);
-            }
-            Console.WriteLine("Підсумок: середній термін ремонту");
-            Console.WriteLine("за типами пристроїв.");
-            Console.WriteLine("Місткість сховища: 100 записів.");
+            Console.WriteLine("Поля сутності «Заявка»:");
+            for (int i = 0; i < fields.Length; i++) Console.WriteLine($"{i + 1}. {fields[i]}");
+            Console.WriteLine("Підсумкова величина: середній термін ремонту за типами пристроїв.");
+            Console.WriteLine($"Місткість сховища: {Capacity}; зайнято: {requestCount}.");
         }
 
         static int ReadInt(string prompt, int min, int max)
@@ -97,6 +104,63 @@ namespace RepairService
             }
         }
 
+        static string ReadText(string prompt, int maxLength)
+        {
+            while (true)
+            {
+                Console.Write(prompt);
+                string value = Console.ReadLine().Trim();
+                if (value.Length > 0 && value.Length <= maxLength) return value;
+                Console.WriteLine($"Помилка: текст має містити від 1 до {maxLength} символів.");
+            }
+        }
+
+        static DateTime ReadDate(string prompt, DateTime min, DateTime max)
+        {
+            while (true)
+            {
+                Console.Write(prompt);
+                string text = Console.ReadLine();
+                if (DateTime.TryParse(text, CultureInfo.CurrentCulture, DateTimeStyles.None, out DateTime date)
+                    && date.Date >= min.Date && date.Date <= max.Date) return date.Date;
+                Console.WriteLine($"Помилка: введіть дату від {min:dd.MM.yyyy} до {max:dd.MM.yyyy}.");
+            }
+        }
+
+        static void AddRequest()
+        {
+            if (requestCount >= Capacity)
+            {
+                Console.WriteLine("Сховище заявок заповнене.");
+                return;
+            }
+
+            int i = requestCount;
+            RequestNumbers[i] = i + 1;
+            Clients[i] = ReadText("Клієнт: ", 40);
+            Devices[i] = ReadText("Тип пристрою: ", 30);
+            Faults[i] = ReadText("Несправність: ", 100);
+            ReceivedDates[i] = ReadDate("Дата прийому (дд.мм.рррр): ", DateTime.MinValue, DateTime.Today);
+            IssuedDates[i] = ReadDate("Дата видачі (дд.мм.рррр): ", ReceivedDates[i], DateTime.MaxValue);
+            Costs[i] = ReadDouble("Вартість ремонту (грн): ", 0, 10000000);
+            Console.WriteLine("Статуси: 1 — Прийнято, 2 — У ремонті, 3 — Видано.");
+            StatusCodes[i] = ReadInt("Код статусу: ", 1, StatusNames.Length);
+            requestCount++;
+            Console.WriteLine($"Заявку №{RequestNumbers[i]} збережено. Зайнято {requestCount} із {Capacity} місць.");
+        }
+
+        static void ShowRequests()
+        {
+            if (requestCount == 0) { Console.WriteLine("Заявок поки немає."); return; }
+
+            Console.WriteLine("№  Клієнт              Пристрій        Прийом      Видача      Вартість   Статус");
+            for (int i = 0; i < requestCount; i++)
+                Console.WriteLine($"{RequestNumbers[i],-3}{Clients[i],-20}{Devices[i],-16}" +
+                    $"{ReceivedDates[i]:dd.MM.yyyy}  {IssuedDates[i]:dd.MM.yyyy}  " +
+                    $"{Costs[i],9:F2}  {StatusNames[StatusCodes[i] - 1]}");
+        }
+
+        // Повертає середню кількість днів ремонту для заданого типу пристрою.
         static double CalculateCost(double hours)
         {
             double work = HourRate * hours;
@@ -104,6 +168,7 @@ namespace RepairService
             return work * (1 + surcharge) + PartsCost;
         }
 
+        // Табулювання отримує межі та крок як параметри, а обчислення вартості делегує окремому методу.
         static void PrintCostTable(double start, double end, double step)
         {
             Console.WriteLine("\nВартість ремонту залежно від часу роботи (грн)");
@@ -123,55 +188,6 @@ namespace RepairService
                 return;
             }
             PrintCostTable(start, end, step);
-        }
-
-
-        static string RowName(int index)
-        {
-            return index < DeviceTypes.Length ? DeviceTypes[index] : "Тип " + (index + 1);
-        }
-
-        static string ColumnName(int index)
-        {
-            return index < Months.Length ? Months[index] : "М" + (index + 1);
-        }
-
-// умовні дані: справжні заявки з'являться разом зі сховищем
-        static int RequestCount(int row, int col)
-        {
-            return (row * 5 + col * 3 + row * col) % 9 + 1;
-        }
-
-        static void ShowRequestsTable()
-        {
-            int rows = ReadInt("Кількість рядків (типів): ", 1, MaxTableSize);
-            int cols = ReadInt("Кількість стовпців (місяців): ", 1, MaxTableSize);
-            int[] colTotals = new int[cols];
-            int grandTotal = 0;
-            string line = new string('-', 11 + cols * 5 + 7);
-            Console.WriteLine("\nПрийнято заявок за типами пристроїв і місяцями");
-            Console.Write("{0,-11}", "Тип");
-            for (int c = 0; c < cols; c++) Console.Write("{0,5}", ColumnName(c));
-            Console.WriteLine("{0,7}", "Разом");
-            Console.WriteLine(line);
-            for (int r = 0; r < rows; r++)
-            {
-                int rowTotal = 0;
-                Console.Write("{0,-11}", RowName(r));
-                for (int c = 0; c < cols; c++)
-                {
-                    int value = RequestCount(r, c);
-                    rowTotal += value;
-                    colTotals[c] += value;
-                    Console.Write("{0,5}", value);
-                }
-                grandTotal += rowTotal;
-                Console.WriteLine("{0,7}", rowTotal);
-            }
-            Console.WriteLine(line);
-            Console.Write("{0,-11}", "Разом");
-            for (int c = 0; c < cols; c++) Console.Write("{0,5}", colTotals[c]);
-            Console.WriteLine("{0,7}", grandTotal);
         }
     }
 }
