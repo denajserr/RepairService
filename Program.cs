@@ -71,6 +71,23 @@ namespace RepairService
                         Console.WriteLine($"Елемент масиву після виклику методу: {demoValues[0]:F2}");
                         break;
 
+                    case "5":
+                        Console.Write($"Введіть номер елемента для видалення (1–{count}): ");
+                        string indexInput = Console.ReadLine();
+
+                        if (!int.TryParse(indexInput, out int number))
+                        {
+                            Console.WriteLine("Помилка: введіть цілий номер елемента.");
+                            break;
+                        }
+
+                        if (RemoveAt(values, ref count, number - 1))
+                            Console.WriteLine($"Елемент №{number} видалено. Залишилося записів: {count}.");
+                        else
+                            Console.WriteLine($"Неправильний номер. Введіть число від 1 до {count}.");
+
+                        break;
+
                     case "0":
                         running = false;
                         break;
@@ -96,6 +113,7 @@ namespace RepairService
             Console.WriteLine("2 — показати значення");
             Console.WriteLine("3 — показати статистику");
             Console.WriteLine("4 — дослід передавання параметрів");
+            Console.WriteLine("5 — видалити значення за номером");
             Console.WriteLine("0 — вихід");
             Console.Write("Ваш вибір: ");
         }
@@ -173,17 +191,29 @@ namespace RepairService
             Console.WriteLine($"Його номер у списку: {number}");
         }
 
-        // int передається копією, тому зміна параметра не змінює змінну в Main.
         static void IncreaseInteger(int value)
         {
             value += 100;
         }
 
-        // Копіюється посилання на масив, тому зміна його елемента видима в Main.
         static void IncreaseFirstValue(double[] values, int count)
         {
             if (count > 0)
                 values[0] += 100;
+        }
+
+        // Видаляє елемент за індексом і зсуває наступні значення вліво.
+        static bool RemoveAt(double[] values, ref int count, int index)
+        {
+            if (index < 0 || index >= count)
+                return false;
+
+            for (int i = index; i < count - 1; i++)
+                values[i] = values[i + 1];
+
+            count--;
+            values[count] = 0;
+            return true;
         }
     }
 }
