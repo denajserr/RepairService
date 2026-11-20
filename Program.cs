@@ -54,6 +54,10 @@ namespace RepairService
                         PrintValues(values, count);
                         break;
 
+                    case "3":
+                        ShowStatistics(values, count);
+                        break;
+
                     case "0":
                         running = false;
                         break;
@@ -77,11 +81,11 @@ namespace RepairService
             Console.WriteLine("=== Сервіс ремонту техніки ===");
             Console.WriteLine("1 — додати значення вартості ремонту");
             Console.WriteLine("2 — показати значення");
+            Console.WriteLine("3 — показати статистику");
             Console.WriteLine("0 — вихід");
             Console.Write("Ваш вибір: ");
         }
 
-        // Метод записує значення в масив і змінює лічильник через ref.
         static bool AddValue(double[] values, ref int count, double newValue, int capacity)
         {
             if (count >= capacity || count >= values.Length)
@@ -92,7 +96,6 @@ namespace RepairService
             return true;
         }
 
-        // Метод отримує масив і кількість заповнених елементів параметрами.
         static void PrintValues(double[] values, int count)
         {
             if (count == 0)
@@ -104,6 +107,58 @@ namespace RepairService
             Console.WriteLine("№\tВартість ремонту, грн");
             for (int i = 0; i < count; i++)
                 Console.WriteLine($"{i + 1}\t{values[i]:F2}");
+        }
+
+        // Повертає найбільше значення та його номер через два out-параметри.
+        static bool FindMaximum(
+            double[] values,
+            int count,
+            out double maximum,
+            out int number)
+        {
+            if (count <= 0)
+            {
+                maximum = 0;
+                number = -1;
+                return false;
+            }
+
+            maximum = values[0];
+            number = 1;
+
+            for (int i = 1; i < count; i++)
+            {
+                if (values[i] > maximum)
+                {
+                    maximum = values[i];
+                    number = i + 1;
+                }
+            }
+
+            return true;
+        }
+
+        static void ShowStatistics(double[] values, int count)
+        {
+            if (count == 0)
+            {
+                Console.WriteLine("Немає значень для обчислення статистики.");
+                return;
+            }
+
+            double sum = 0;
+            for (int i = 0; i < count; i++)
+                sum += values[i];
+
+            double average = sum / count;
+
+            FindMaximum(values, count, out double maximum, out int number);
+
+            Console.WriteLine($"Кількість значень: {count}");
+            Console.WriteLine($"Сума: {sum:F2} грн");
+            Console.WriteLine($"Середнє значення: {average:F2} грн");
+            Console.WriteLine($"Найбільше значення: {maximum:F2} грн");
+            Console.WriteLine($"Його номер у списку: {number}");
         }
     }
 }
