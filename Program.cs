@@ -25,22 +25,34 @@ namespace RepairService
                 switch (choice)
                 {
                     case "1":
+                    {
                         if (count >= Capacity)
                         {
                             Console.WriteLine("Масив заповнений.");
                             break;
                         }
 
-                        Console.Write("Введіть значення вартості ремонту: ");
-                        string input = Console.ReadLine();
+                        double newValue;
 
-                        if (!double.TryParse(input, out double newValue)
-                            || double.IsNaN(newValue)
-                            || double.IsInfinity(newValue)
-                            || newValue < 0)
+                        // Повторюємо введення тут, у Main, доки значення не буде коректним.
+                        while (true)
                         {
+                            Console.Write("Введіть невід’ємну вартість ремонту: ");
+                            string input = Console.ReadLine();
+
+                            if (double.TryParse(
+                                    input,
+                                    NumberStyles.Float,
+                                    CultureInfo.CurrentCulture,
+                                    out newValue)
+                                && !double.IsNaN(newValue)
+                                && !double.IsInfinity(newValue)
+                                && newValue >= 0)
+                            {
+                                break;
+                            }
+
                             Console.WriteLine("Помилка: введіть невід’ємне число.");
-                            break;
                         }
 
                         if (AddValue(values, ref count, newValue, Capacity))
@@ -49,6 +61,7 @@ namespace RepairService
                             Console.WriteLine("Не вдалося додати значення.");
 
                         break;
+                    }
 
                     case "2":
                         PrintValues(values, count);
@@ -59,6 +72,7 @@ namespace RepairService
                         break;
 
                     case "4":
+                    {
                         int originalNumber = 50;
                         Console.WriteLine($"Ціле число до виклику методу: {originalNumber}");
                         IncreaseInteger(originalNumber);
@@ -70,23 +84,43 @@ namespace RepairService
                         IncreaseFirstValue(demoValues, demoCount);
                         Console.WriteLine($"Елемент масиву після виклику методу: {demoValues[0]:F2}");
                         break;
+                    }
 
                     case "5":
-                        Console.Write($"Введіть номер елемента для видалення (1–{count}): ");
-                        string indexInput = Console.ReadLine();
-
-                        if (!int.TryParse(indexInput, out int number))
+                    {
+                        if (count == 0)
                         {
-                            Console.WriteLine("Помилка: введіть цілий номер елемента.");
+                            Console.WriteLine("Масив порожній — видаляти нічого.");
                             break;
                         }
 
+                        int number;
+
+                        // Main читає номер; RemoveAt отримує вже перевірене число.
+                        while (true)
+                        {
+                            Console.Write($"Введіть номер елемента для видалення (1–{count}): ");
+                            string indexInput = Console.ReadLine();
+
+                            if (int.TryParse(indexInput, out number))
+                                break;
+
+                            Console.WriteLine("Помилка: введіть цілий номер елемента.");
+                        }
+
                         if (RemoveAt(values, ref count, number - 1))
-                            Console.WriteLine($"Елемент №{number} видалено. Залишилося записів: {count}.");
+                        {
+                            Console.WriteLine(
+                                $"Елемент №{number} видалено. Залишилося записів: {count}.");
+                        }
                         else
-                            Console.WriteLine($"Неправильний номер. Введіть число від 1 до {count}.");
+                        {
+                            Console.WriteLine(
+                                $"Неправильний номер. Введіть число від 1 до {count}.");
+                        }
 
                         break;
+                    }
 
                     case "0":
                         running = false;
@@ -191,11 +225,13 @@ namespace RepairService
             Console.WriteLine($"Його номер у списку: {number}");
         }
 
+        // Зміна копії int не змінює початкову змінну в Main.
         static void IncreaseInteger(int value)
         {
             value += 100;
         }
 
+        // Масив змінюється через посилання на його дані.
         static void IncreaseFirstValue(double[] values, int count)
         {
             if (count > 0)
