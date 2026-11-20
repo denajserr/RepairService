@@ -58,6 +58,19 @@ namespace RepairService
                         ShowStatistics(values, count);
                         break;
 
+                    case "4":
+                        int originalNumber = 50;
+                        Console.WriteLine($"Ціле число до виклику методу: {originalNumber}");
+                        IncreaseInteger(originalNumber);
+                        Console.WriteLine($"Ціле число після виклику методу: {originalNumber}");
+
+                        double[] demoValues = { 50.0 };
+                        int demoCount = 1;
+                        Console.WriteLine($"Елемент масиву до виклику методу: {demoValues[0]:F2}");
+                        IncreaseFirstValue(demoValues, demoCount);
+                        Console.WriteLine($"Елемент масиву після виклику методу: {demoValues[0]:F2}");
+                        break;
+
                     case "0":
                         running = false;
                         break;
@@ -82,6 +95,7 @@ namespace RepairService
             Console.WriteLine("1 — додати значення вартості ремонту");
             Console.WriteLine("2 — показати значення");
             Console.WriteLine("3 — показати статистику");
+            Console.WriteLine("4 — дослід передавання параметрів");
             Console.WriteLine("0 — вихід");
             Console.Write("Ваш вибір: ");
         }
@@ -109,7 +123,6 @@ namespace RepairService
                 Console.WriteLine($"{i + 1}\t{values[i]:F2}");
         }
 
-        // Повертає найбільше значення та його номер через два out-параметри.
         static bool FindMaximum(
             double[] values,
             int count,
@@ -151,7 +164,6 @@ namespace RepairService
                 sum += values[i];
 
             double average = sum / count;
-
             FindMaximum(values, count, out double maximum, out int number);
 
             Console.WriteLine($"Кількість значень: {count}");
@@ -159,6 +171,19 @@ namespace RepairService
             Console.WriteLine($"Середнє значення: {average:F2} грн");
             Console.WriteLine($"Найбільше значення: {maximum:F2} грн");
             Console.WriteLine($"Його номер у списку: {number}");
+        }
+
+        // int передається копією, тому зміна параметра не змінює змінну в Main.
+        static void IncreaseInteger(int value)
+        {
+            value += 100;
+        }
+
+        // Копіюється посилання на масив, тому зміна його елемента видима в Main.
+        static void IncreaseFirstValue(double[] values, int count)
+        {
+            if (count > 0)
+                values[0] += 100;
         }
     }
 }
